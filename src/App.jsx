@@ -225,7 +225,7 @@ function JokeCard({ onMarco }) {
       <div style={{background:"#f9fafb",borderRadius:"14px",width:"52px",height:"52px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.5rem",flexShrink:0}}>🏠</div>
       <div style={{flex:1}}>
         <div style={{display:"flex",alignItems:"center",gap:"0.6rem",marginBottom:"0.35rem",flexWrap:"wrap"}}>
-          <span style={{fontSize:"1rem",fontWeight:"700",color:"#111827"}}>Go home and die</span>
+          <span style={{fontSize:"1rem",fontWeight:"700",color:"#111827"}}>Go Home and Die</span>
           <span style={{background:"#fef2f2",color:"#dc2626",fontSize:"0.7rem",fontWeight:"700",padding:"0.2rem 0.6rem",borderRadius:"1rem"}}>Classic option</span>
         </div>
         <p style={{color:"#6b7280",fontSize:"0.88rem",lineHeight:"1.6",margin:0}}>Stay in, suffer and cringe from your neighbour Sergey.</p>
