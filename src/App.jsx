@@ -413,6 +413,17 @@ export default function App() {
         </div>)}
       </div>
 
+      {selected==="horse" && (
+        <div style={{width:"100%",maxWidth:"500px",marginBottom:"1rem",background:"#fffbeb",border:"2px solid #fde68a",borderRadius:"16px",padding:"1rem 1.2rem"}}>
+          <p style={{color:"#92400e",fontSize:"0.82rem",lineHeight:"1.6",margin:"0 0 0.5rem 0"}}>
+            ⏰ <strong>The time shown is when we meet.</strong> Horse riding starts an hour later.
+          </p>
+          <p style={{color:"#92400e",fontSize:"0.82rem",lineHeight:"1.6",margin:0}}>
+            📋 These are approximate times — need to be confirmed. This app is not synced with the horse riding service's website.
+          </p>
+        </div>
+      )}
+
       {selDate&&(
         <div style={{background:"white",borderRadius:"24px",padding:"1.5rem",width:"100%",maxWidth:"500px",boxShadow:"0 2px 16px rgba(0,0,0,0.07)",marginBottom:"1rem"}}>
           <p style={{fontWeight:"800",fontSize:"0.9rem",color:"#111827",marginBottom:"1rem"}}>Pick a time — {formatDate(selDate)}</p>
@@ -431,16 +442,6 @@ export default function App() {
         </div>
       )}
 
-      {selected==="horse" && (
-        <div style={{width:"100%",maxWidth:"500px",marginBottom:"1rem",background:"#fffbeb",border:"2px solid #fde68a",borderRadius:"16px",padding:"1rem 1.2rem"}}>
-          <p style={{color:"#92400e",fontSize:"0.82rem",lineHeight:"1.6",margin:"0 0 0.5rem 0"}}>
-            ⏰ <strong>The time shown is when we meet.</strong> Horse riding starts an hour later.
-          </p>
-          <p style={{color:"#92400e",fontSize:"0.82rem",lineHeight:"1.6",margin:0}}>
-            📋 These are approximate times — need to be confirmed. This app is not synced with the horse riding service's website.
-          </p>
-        </div>
-      )}
       {sendError && (
         <p style={{color:"#ef4444",fontSize:"0.85rem",marginBottom:"0.75rem",textAlign:"center",maxWidth:"500px",width:"100%"}}>
           Something went wrong. Please try again.
