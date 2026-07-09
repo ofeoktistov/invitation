@@ -214,6 +214,7 @@ export default function App() {
   const [hovered,setHovered]=useState(null);
   const [comment,setComment]=useState("");
   const [sending,setSending]=useState(false);
+  const [sendError,setSendError]=useState(false);
   const today=new Date();
   const [calYear,setCalYear]=useState(today.getFullYear());
   const [calMonth,setCalMonth]=useState(today.getMonth());
@@ -232,7 +233,35 @@ export default function App() {
   const prevMonth=()=>{ if(calMonth===0){setCalMonth(11);setCalYear(y=>y-1);}else setCalMonth(m=>m-1); setSelDate(null);setSelTime(null); };
   const nextMonth=()=>{ if(calMonth===11){setCalMonth(0);setCalYear(y=>y+1);}else setCalMonth(m=>m+1); setSelDate(null);setSelTime(null); };
   const reset=()=>{ setStep(1);setSelected(null);setDayTripDest(null);setSelDate(null);setSelTime(null);setComment(""); };
-  const handleConfirm=()=>{ setSending(true); setTimeout(()=>{ setSending(false); setStep(3); },1000); };
+  const handleConfirm = async () => {
+    setSending(true);
+    setSendError(false);
+    const activityTitle = selected === "daytrip" && destInfo ? destInfo.name : choice?.title;
+    try {
+      if (!window.emailjs) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+      window.emailjs.init("nW4clJz0OXUocTddy");
+      await window.emailjs.send("service_zfi5tsw", "template_kjszici", {
+        choice: activityTitle,
+        date: formatDate(selDate),
+        time: selTime,
+        comment: comment || "—",
+      });
+      setStep(3);
+    } catch (e) {
+      console.error("EmailJS error:", e);
+      setSendError(true);
+    } finally {
+      setSending(false);
+    }
+  };
 
   const canProceedStep1 = selected && (selected !== "daytrip" || dayTripDest);
 
@@ -340,6 +369,11 @@ export default function App() {
         </div>
       )}
 
+      {sendError && (
+        <p style={{color:"#ef4444",fontSize:"0.85rem",marginBottom:"0.75rem",textAlign:"center",maxWidth:"500px",width:"100%"}}>
+          Something went wrong sending the response. Please try again.
+        </p>
+      )}
       <button onClick={()=>selDate&&selTime&&!sending&&handleConfirm()} style={{background:selDate&&selTime?PUR:"#f3f4f6",color:selDate&&selTime?"white":"#9ca3af",border:"none",padding:"0.95rem 2.8rem",borderRadius:"2rem",fontSize:"1rem",fontWeight:"700",cursor:selDate&&selTime&&!sending?"pointer":"not-allowed",transition:"all 0.2s ease",boxShadow:selDate&&selTime?"0 4px 20px rgba(79,70,229,0.35)":"none",fontFamily:FONT,width:"100%",maxWidth:"500px",opacity:sending?0.7:1}}>
         {sending?"Sending... ⏳":selDate&&selTime?`Confirm — ${formatDate(selDate)} at ${selTime} →`:"Pick a date and time"}
       </button>
