@@ -5,6 +5,7 @@ const options = [
   { id:"daytrip", emoji:"🗺️", title:"Day Trip", tag:"Adventure", description:"We pick a destination, take a train, and spend a day somewhere that isn't Prague.", gradient:"linear-gradient(135deg,#2563eb,#3b82f6)", tagBg:"#eff6ff", tagColor:"#1d4ed8", border:"#bfdbfe" },
   { id:"food", emoji:"🍜", title:"Something New to Eat", tag:"Culinary Adventure", description:"I'll pick the place and make sure there is something vegan. You bring gay jokes.", gradient:"linear-gradient(135deg,#7c3aed,#8b5cf6)", tagBg:"#f5f3ff", tagColor:"#6d28d9", border:"#ddd6fe" },
   { id:"walk", emoji:"🚶", title:"Take a Nice Walk", tag:"Easy & Relaxed", description:"Gay and shit jokes, swearing, beating me and being yourself are all encouraged.", gradient:"linear-gradient(135deg,#059669,#10b981)", tagBg:"#ecfdf5", tagColor:"#047857", border:"#a7f3d0" },
+  { id:"surprise", emoji:"🎲", title:"Surprise Me", tag:"Mystery", description:"I pick everything. You just show up.", gradient:"linear-gradient(135deg,#db2777,#f43f5e)", tagBg:"#fdf2f8", tagColor:"#be185d", border:"#fbcfe8" },
 ];
 
 const DAYTRIP_DESTINATIONS = [
@@ -22,7 +23,7 @@ const DAYTRIP_DESTINATIONS = [
   },
 ];
 
-const ALL_TIMES = ["10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00"];
+const ALL_TIMES = ["10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"];
 // Horse riding: specific available slots (year, 0-indexed month, day)
 const HORSE_SLOTS = {
   "2026-6-11": ["15:30", "16:00"],
@@ -40,6 +41,27 @@ const FONT = "'Inter','Segoe UI',sans-serif";
 const PUR = "linear-gradient(135deg,#4f46e5,#7c3aed)";
 const PRAGUE_X = 148, PRAGUE_Y = 82;
 
+function getSurpriseSlots(y,m,d){
+  const set=new Set();
+  (HORSE_SLOTS[horseKey(y,m,d)]||[]).forEach(t=>set.add(t));
+  const dow=new Date(y,m,d).getDay();
+  const eveningStart=dow===4?"20:00":"18:00";
+  if(dow!==5){
+    // food
+    if(!isBlockedDate(y,m,d,"food")){
+      if(dow===0) ALL_TIMES.forEach(t=>set.add(t));
+      else if(dow===6) ALL_TIMES.filter(t=>t<="16:00").forEach(t=>set.add(t));
+      else ALL_TIMES.filter(t=>t>=eveningStart).forEach(t=>set.add(t));
+    }
+    // walk
+    if(dow===0) ALL_TIMES.forEach(t=>set.add(t));
+    else if(dow===6) ALL_TIMES.filter(t=>t<="16:00").forEach(t=>set.add(t));
+    else if(dow!==5) ALL_TIMES.filter(t=>t>=eveningStart).forEach(t=>set.add(t));
+    // daytrip (Sundays)
+    if(dow===0) ALL_TIMES.forEach(t=>set.add(t));
+  }
+  return [...set].sort((a,b)=>{const[ah,am]=a.split(":").map(Number);const[bh,bm]=b.split(":").map(Number);return(ah*60+am)-(bh*60+bm);});
+}
 function getDow(y,m,d){ return new Date(y,m,d).getDay(); }
 function isFriday(y,m,d){ return getDow(y,m,d)===5; }
 const BLOCKED=[{year:2026,month:6,day:11}];
@@ -51,6 +73,7 @@ function isDayDisabled(y,m,d,choice){
   if(choice==="daytrip") return dow!==0;
   if(choice==="food"){ if(dow===5)return true; if(isBlockedDate(y,m,d,choice))return true; return false; }
   if(choice==="walk") return dow===5;
+  if(choice==="surprise") return getSurpriseSlots(y,m,d).length===0;
   return false;
 }
 function getSlots(y,m,d,choice){
@@ -60,6 +83,7 @@ function getSlots(y,m,d,choice){
   if(choice==="daytrip") return ALL_TIMES;
   if(choice==="food"){ if(dow===0)return ALL_TIMES; if(dow===6)return ALL_TIMES.filter(t=>t<="16:00"); return ALL_TIMES.filter(t=>t>="18:00"); }
   if(choice==="walk"){ if(dow===0)return ALL_TIMES; if(dow===6)return ALL_TIMES.filter(t=>t<="16:00"); return ALL_TIMES.filter(t=>t>="18:00"); }
+  if(choice==="surprise") return getSurpriseSlots(y,m,d);
   return ALL_TIMES;
 }
 function getHints(choice){
@@ -67,6 +91,7 @@ function getHints(choice){
   if(choice==="daytrip") return [{label:"Mon–Sat",note:"Not available",muted:true},{label:"Sunday",note:"Any time ✓"}];
   if(choice==="food") return [{label:"Mon–Thu",note:"From 18:00"},{label:"Friday",note:"Not available",muted:true},{label:"Saturday",note:"Till 16:00 (Jul 11 blocked)"},{label:"Sunday",note:"10:00–21:00"}];
   if(choice==="walk") return [{label:"Mon–Thu",note:"From 18:00"},{label:"Friday",note:"Not available",muted:true},{label:"Saturday",note:"Till 16:00"},{label:"Sunday",note:"Any time"}];
+  if(choice==="surprise") return [{label:"Mon–Thu",note:"From 18:00"},{label:"Friday",note:"Not available",muted:true},{label:"Saturday",note:"Various times"},{label:"Sunday",note:"Any time"}];
   return[];
 }
 function getDaysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
@@ -217,7 +242,6 @@ export default function App() {
   const [hovered,setHovered]=useState(null);
   const [comment,setComment]=useState("");
   const [sending,setSending]=useState(false);
-  const [sendError,setSendError]=useState(false);
   const today=new Date();
   const [calYear,setCalYear]=useState(today.getFullYear());
   const [calMonth,setCalMonth]=useState(today.getMonth());
@@ -236,59 +260,8 @@ export default function App() {
   const prevMonth=()=>{ if(calMonth===0){setCalMonth(11);setCalYear(y=>y-1);}else setCalMonth(m=>m-1); setSelDate(null);setSelTime(null); };
   const nextMonth=()=>{ if(calMonth===11){setCalMonth(0);setCalYear(y=>y+1);}else setCalMonth(m=>m+1); setSelDate(null);setSelTime(null); };
   const reset=()=>{ setStep(1);setSelected(null);setDayTripDest(null);setSelDate(null);setSelTime(null);setComment(""); };
-  const handleMarco = async () => {
-    setStep("marco");
-    try {
-      if (!window.emailjs) {
-        await new Promise((resolve, reject) => {
-          const script = document.createElement("script");
-          script.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-      }
-      window.emailjs.init("nW4clJz0OXUocTddy");
-      await window.emailjs.send("service_zfi5tsw", "template_kjszici", {
-        choice: "Go out with Marco",
-        date: "null",
-        time: "null",
-        comment: "null",
-      });
-    } catch (e) {
-      console.error("EmailJS Marco error:", e);
-    }
-  };
-
-  const handleConfirm = async () => {
-    setSending(true);
-    setSendError(false);
-    const activityTitle = selected === "daytrip" && destInfo ? destInfo.name : choice?.title;
-    try {
-      if (!window.emailjs) {
-        await new Promise((resolve, reject) => {
-          const script = document.createElement("script");
-          script.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-      }
-      window.emailjs.init("nW4clJz0OXUocTddy");
-      await window.emailjs.send("service_zfi5tsw", "template_kjszici", {
-        choice: activityTitle,
-        date: formatDate(selDate),
-        time: selTime,
-        comment: comment || "—",
-      });
-      setStep(3);
-    } catch (e) {
-      console.error("EmailJS error:", e);
-      setSendError(true);
-    } finally {
-      setSending(false);
-    }
-  };
+  const handleConfirm=()=>{ setSending(true); setTimeout(()=>{ setSending(false); setStep(3); },1000); };
+  const handleMarco=()=>{ setStep("marco"); };
 
   const canProceedStep1 = selected && (selected !== "daytrip" || dayTripDest);
 
@@ -408,11 +381,6 @@ export default function App() {
         </div>
       )}
 
-      {sendError && (
-        <p style={{color:"#ef4444",fontSize:"0.85rem",marginBottom:"0.75rem",textAlign:"center",maxWidth:"500px",width:"100%"}}>
-          Something went wrong sending the response. Please try again.
-        </p>
-      )}
       <button onClick={()=>selDate&&selTime&&!sending&&handleConfirm()} style={{background:selDate&&selTime?PUR:"#f3f4f6",color:selDate&&selTime?"white":"#9ca3af",border:"none",padding:"0.95rem 2.8rem",borderRadius:"2rem",fontSize:"1rem",fontWeight:"700",cursor:selDate&&selTime&&!sending?"pointer":"not-allowed",transition:"all 0.2s ease",boxShadow:selDate&&selTime?"0 4px 20px rgba(79,70,229,0.35)":"none",fontFamily:FONT,width:"100%",maxWidth:"500px",opacity:sending?0.7:1}}>
         {sending?"Sending... ⏳":selDate&&selTime?`Confirm — ${formatDate(selDate)} at ${selTime} →`:"Pick a date and time"}
       </button>
