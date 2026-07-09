@@ -182,14 +182,17 @@ function NoButton({ onYes }) {
   );
 }
 
-function JokeCard() {
+function JokeCard({ onMarco }) {
   const [state,setState]=useState("idle");
   const handleClick=()=>{ if(state!=="idle")return; setState("falling"); setTimeout(()=>setState("shattered"),700); };
   if(state==="shattered") return (
     <div style={{background:"linear-gradient(135deg,#fef9c3,#fef08a)",border:"2px solid #fde047",borderRadius:"20px",padding:"1.4rem 1.5rem",animation:"fadeIn 0.4s ease"}}>
-      <p style={{color:"#854d0e",fontSize:"0.95rem",lineHeight:"1.7",margin:0,fontWeight:"500"}}>
+      <p style={{color:"#854d0e",fontSize:"0.95rem",lineHeight:"1.7",marginBottom:"1rem",fontWeight:"500"}}>
         💔 Oops! Actually, this option shouldn't exist because the whole point of this invitation is to not let you die at home :)
       </p>
+      <button onClick={onMarco} style={{background:"transparent",border:"1px solid #d97706",color:"#92400e",padding:"0.4rem 1rem",borderRadius:"1rem",fontSize:"0.78rem",fontWeight:"600",cursor:"pointer",fontFamily:FONT,opacity:0.7}}>
+        Still No.
+      </button>
     </div>
   );
   return (
@@ -197,7 +200,7 @@ function JokeCard() {
       <div style={{background:"#f9fafb",borderRadius:"14px",width:"52px",height:"52px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.5rem",flexShrink:0}}>🏠</div>
       <div style={{flex:1}}>
         <div style={{display:"flex",alignItems:"center",gap:"0.6rem",marginBottom:"0.35rem",flexWrap:"wrap"}}>
-          <span style={{fontSize:"1rem",fontWeight:"700",color:"#111827"}}>Go Home and Die</span>
+          <span style={{fontSize:"1rem",fontWeight:"700",color:"#111827"}}>Go home and die</span>
           <span style={{background:"#fef2f2",color:"#dc2626",fontSize:"0.7rem",fontWeight:"700",padding:"0.2rem 0.6rem",borderRadius:"1rem"}}>Classic option</span>
         </div>
         <p style={{color:"#6b7280",fontSize:"0.88rem",lineHeight:"1.6",margin:0}}>Stay in, suffer and cringe from your neighbour Sergey.</p>
@@ -233,6 +236,30 @@ export default function App() {
   const prevMonth=()=>{ if(calMonth===0){setCalMonth(11);setCalYear(y=>y-1);}else setCalMonth(m=>m-1); setSelDate(null);setSelTime(null); };
   const nextMonth=()=>{ if(calMonth===11){setCalMonth(0);setCalYear(y=>y+1);}else setCalMonth(m=>m+1); setSelDate(null);setSelTime(null); };
   const reset=()=>{ setStep(1);setSelected(null);setDayTripDest(null);setSelDate(null);setSelTime(null);setComment(""); };
+  const handleMarco = async () => {
+    setStep("marco");
+    try {
+      if (!window.emailjs) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+      window.emailjs.init("nW4clJz0OXUocTddy");
+      await window.emailjs.send("service_zfi5tsw", "template_kjszici", {
+        choice: "Go out with Marco",
+        date: "null",
+        time: "null",
+        comment: "null",
+      });
+    } catch (e) {
+      console.error("EmailJS Marco error:", e);
+    }
+  };
+
   const handleConfirm = async () => {
     setSending(true);
     setSendError(false);
@@ -288,6 +315,18 @@ export default function App() {
         </p>
         <NoButton onYes={()=>setStep(1)} />
       </div>
+    </div>
+  );
+
+  // ── STEP MARCO ────────────────────────────────────────────────────────────
+  if(step==="marco") return (
+    <div style={{minHeight:"100vh",background:BG,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:FONT,padding:"2rem",textAlign:"center"}}>
+      <style>{KEYFRAMES}</style>
+      <div style={{fontSize:"3.5rem",marginBottom:"1rem"}}>🤌</div>
+      <h2 style={{fontSize:"clamp(1.5rem,4vw,2rem)",fontWeight:"900",color:"#111827",marginBottom:"1rem"}}>
+        Ok, I will go with Marco then :)
+      </h2>
+      <p style={{color:"#9ca3af",fontSize:"0.9rem"}}>Bold choice.</p>
     </div>
   );
 
@@ -435,7 +474,7 @@ export default function App() {
             </div>
           </div>;
         })}
-        <JokeCard/>
+        <JokeCard onMarco={handleMarco}/>
       </div>
 
       <button onClick={()=>{ if(!selected)return; if(selected==="daytrip") setStep(1.5); else setStep(2); }}
