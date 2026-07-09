@@ -27,7 +27,7 @@ const ALL_TIMES = ["10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:0
 // Horse riding: specific available slots (year, 0-indexed month, day)
 const HORSE_SLOTS = {
   "2026-6-11": ["15:30", "16:00"],
-  "2026-6-12": ["14:00"],
+  "2026-6-12": ["12:00"],
   "2026-6-13": ["11:00", "12:00", "14:00"],
   "2026-6-15": ["09:30"],
   "2026-6-18": ["11:00", "12:00", "14:00", "15:00", "16:00"],
@@ -431,6 +431,16 @@ export default function App() {
         </div>
       )}
 
+      {selected==="horse" && (
+        <div style={{width:"100%",maxWidth:"500px",marginBottom:"1rem",background:"#fffbeb",border:"2px solid #fde68a",borderRadius:"16px",padding:"1rem 1.2rem"}}>
+          <p style={{color:"#92400e",fontSize:"0.82rem",lineHeight:"1.6",margin:"0 0 0.5rem 0"}}>
+            ⏰ <strong>The time shown is when we meet.</strong> Horse riding starts an hour later.
+          </p>
+          <p style={{color:"#92400e",fontSize:"0.82rem",lineHeight:"1.6",margin:0}}>
+            📋 These are approximate times — need to be confirmed. This app is not synced with the horse riding service's website.
+          </p>
+        </div>
+      )}
       {sendError && (
         <p style={{color:"#ef4444",fontSize:"0.85rem",marginBottom:"0.75rem",textAlign:"center",maxWidth:"500px",width:"100%"}}>
           Something went wrong. Please try again.
